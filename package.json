@@ -1,0 +1,29 @@
+{
+  "name": "sunshine-server",
+  "description": "sunshine-server",
+  "author": "hci",
+  "version": "0.0.1",
+  "dependencies": {
+    "connect": "1.8.5",
+    "express": "~4.9.0",
+    "express-session": "~1.7.2",
+      "body-parser": "~1.8.1",
+      "cookie-parser": "~1.3.3",
+    "jade": "0.20.0",
+    "ejs" : "0.x.x",
+    "mongoose": "3.x.x",
+    "socket.io": "~0.9.x",
+      "nanotimer" : "~0.x.x",
+      "morgan": "^1.2.2",
+      "method-override": "^2.1.2",
+      "multer": "^0.1.3"
+  },
+  "devDependencies": {
+    "vows": "0.5.x",
+	"mocha": "*",
+	"should": "*",
+    "grunt": "~0.4.5",
+    "grunt-contrib-copy": "0.4.x"
+  },
+  "engine": "node >= 0.6.6"
+}
