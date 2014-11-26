@@ -87,10 +87,10 @@ ioWeb.on('connection', function(socket){
 
 app.get(path.join(context,'/'), routes.index);
 
-app.get(path.join(context, '/data'), getAllTripsJSONP);
-app.get(path.join(context, '/data/:trip_id'), getEventsWithIDJSONP);
+app.get(path.join(context, '/data'), getAllEventsJSONP);
 
-//app.post(path.join(context, '/upload'), storeFile);
+
+app.post(path.join(context, '/upload'), storeEvent);
 
 //console.log('Listening on http://' + server.address() + ':' + port );
 
@@ -100,7 +100,7 @@ app.get(path.join(context, '/data/:trip_id'), getEventsWithIDJSONP);
 ///////////////////////////////////////////
 
 
-function getAllTripsJSONP (request, response, next) {
+function getAllEventsJSONP (request, response, next) {
     console.log("getting get request");
     //check if there is a query parameter sensor
     if (_.size(request.query) == 0){
@@ -115,7 +115,7 @@ function getAllTripsJSONP (request, response, next) {
 
     } else {
 
-        var query = db.queryAllWithFilter(request.query.sensorID, request.query.groupID, request.query.userID, request.query.fromDate, request.query.toDate);
+        var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.object, request.query.context);
         var promise = query.exec();
         promise.onResolve(function (err, results) {
             if (err)
@@ -125,22 +125,40 @@ function getAllTripsJSONP (request, response, next) {
     }
 }
 
-function getEventsWithIDJSONP (request, response, next) {
 
-    var query = db.getEventsWithID(request.params.trip_id);
-    var promise = query.exec();
-    promise.onResolve(function (err, result) {
-        if (err)
-            console.log("Error: " + err);
-        response.jsonp(result);
-
-    });
-}
 
 
 ///////////////////////////////////////////
 //         File Upload                   //
 ///////////////////////////////////////////
+function storeEvent(request, response) {
+    console.log(request.body);
+    try {
+
+        //var received = JSON.parse(request.body);
+        var event = new db.Events(request.body,true);
+        event.save(function (err, image) {
+            if (err) {
+
+                console.error(err);
+                response.json({"Error": err});
+
+            }
+            else
+            {
+                response.json({"Success": true});
+            }
+        });
+    }
+    catch (e) {
+
+        console.log("Illegal JSON data received.");
+        response.json({"Sorry. Failed to upload. Did you include all info?":400});
+
+    }
+}
+
+
 /*
 function storeFile(request, response) {
     console.log(request.body);

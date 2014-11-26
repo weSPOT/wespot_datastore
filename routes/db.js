@@ -17,64 +17,63 @@ db_connection.once('open', function callback () {
 
 var Schema = mongoose.Schema;
 
-    var eventSchema = new Schema({
-        //_id: String,
-        id: String,
-        verb: String,
-        context: {},
-        startTime: Date
+var eventSchema = new Schema({
+    //_id: String,
+    username: String,
+    verb: String,
+    starttime: Date,
+    endtime: Date,
+    target: String,
+    object: String,
+    context: String,
+    location: Schema.Types.Mixed,
+    originalrequest: Schema.Types.Mixed
+},{collection:"events"});
 
-    },{collection:"events"});
 
+var Events = mongoose.model('event',eventSchema);
 
-
-var Event = mongoose.model('Event',eventSchema);
-
-exports.Trip = Event;
-
+exports.Events = Events;
 
 /***************** QUERY METHODS *********************/
 
 var queryAll = function() {
 
-    var query = Event.find({});
+    var query = Events.find({});
     //query.select({_id: 0});
     return query;
 };
 
-var queryAllWithFilter = function(id, verb, startDate){
 
-    var query = Event.find({});
-    if (id !== undefined)
-        query.where('id',sensorID);
-    if (groupID !== undefined)
-        query.where('verb',groupID);
+var queryAllWithFilter = function(username, verb, starttime, endtime, target, object, context){
+
+    var query = Events.find({});
+    if (username !== undefined)
+        query.where('username',username);
+    if (verb !== undefined)
+        query.where('verb',verb);
+    if (target !== undefined)
+        query.where('target',target);
+    if (object !== undefined)
+        query.where('object',object);
+    if (context !== undefined)
+        query.or([{ context: context }, { 'context.course': context }]);
 
     try {
 
-        if (startDate !== undefined)
-            query.where('startDate').gt(new Date(startDate));
+        if (starttime !== undefined)
+            query.where('starttime').gt(new Date(starttime));
+        if (toDate !== undefined)
+            query.where('endtime').lt(new Date(endtime));
 
-    } catch (err){
+    }
+    catch (err){
         console.log(err);
     }
-    //query.select({_id: 1});
+
     return query;
 }
 
 
-var getEventsWithID  = function(identifier) {
-
-    var query = Event.find({});
-    query.where('_id', identifier);
-    return query;
-
-};
-
-
-
-
 exports.queryAll = queryAll;
 exports.queryAllWithFilter = queryAllWithFilter;
-exports.getEventsWithID = getEventsWithID;
-
