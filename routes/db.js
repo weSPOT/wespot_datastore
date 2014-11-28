@@ -2,8 +2,8 @@
 
 var mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/datastore');
-//mongoose.connect('mongodb://ensor.cs.kuleuven.be:27017/sunshine');
+//mongoose.connect('mongodb://localhost/datastore');
+mongoose.connect('mongodb://davinci.cs.kuleuven.be:27017/datastore');
 //var server = new Server('ensor.cs.kuleuven.be', 27017, {auto_reconnect: true});
 
 var db_connection = mongoose.connection;
@@ -19,13 +19,14 @@ var Schema = mongoose.Schema;
 
 var eventSchema = new Schema({
     //_id: String,
+    event_id: String,
     username: String,
     verb: String,
     starttime: Date,
     endtime: Date,
     target: String,
     object: String,
-    context: String,
+    context: Schema.Types.Mixed,
     location: Schema.Types.Mixed,
     originalrequest: Schema.Types.Mixed
 },{collection:"events"});
@@ -56,14 +57,17 @@ var queryAllWithFilter = function(username, verb, starttime, endtime, target, ob
         query.where('target',target);
     if (object !== undefined)
         query.where('object',object);
-    if (context !== undefined)
-        query.or([{ context: context }, { 'context.course': context }]);
+    if (context !== undefined){
+        // query.where('context',context);
+
+        query.or([{ 'context': context }, { 'context.course': context }]);
+    }
 
     try {
 
         if (starttime !== undefined)
             query.where('starttime').gt(new Date(starttime));
-        if (toDate !== undefined)
+        if (endtime !== undefined)
             query.where('endtime').lt(new Date(endtime));
 
     }
