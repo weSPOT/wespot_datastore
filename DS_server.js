@@ -115,7 +115,17 @@ function getAllEventsJSONP (request, response, next) {
 
     } else {
         var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.target, request.query.object, request.query.context);
-        var promise = query.exec();
+        var promise = null;
+        var limit = 1000;
+        if (request.query.limit!=null){
+            limit = request.query.limit;
+        }
+        if (request.query.page!=null){
+            page = request.query.page;
+            promise = query.limit(limit).skip(page * limit).exec();
+        }else{
+            promise = query.exec();
+        }
         promise.onResolve(function (err, results) {
             if (err)
                 console.log("Error: " + err);
