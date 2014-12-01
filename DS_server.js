@@ -101,36 +101,43 @@ app.post(path.join(context, '/event'), storeEvent);
 
 
 function getAllEventsJSONP (request, response, next) {
+    var header=request.headers['authorization'];
     console.log("getting get request");
-    //check if there is a query parameter sensor
-    if (_.size(request.query) == 0){
+    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe'){
+        response.statusCode = 401;
+        response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+        response.end('Unauthorized');
+    }else {
+        //check if there is a query parameter sensor
+        if (_.size(request.query) == 0) {
 
-        var query = db.queryAll();
-        var promise = query.exec();
-        promise.onResolve(function (err, results) {
-            if (err)
-                console.log("Error: " + err);
-            response.jsonp(results);
-        });
+            var query = db.queryAll();
+            var promise = query.exec();
+            promise.onResolve(function (err, results) {
+                if (err)
+                    console.log("Error: " + err);
+                response.jsonp(results);
+            });
 
-    } else {
-        var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.target, request.query.object, request.query.context);
-        var promise = null;
-        var limit = 1000;
-        if (request.query.limit!=null){
-            limit = request.query.limit;
+        } else {
+            var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.target, request.query.object, request.query.context);
+            var promise = null;
+            var limit = 1000;
+            if (request.query.limit != null) {
+                limit = request.query.limit;
+            }
+            if (request.query.page != null) {
+                page = request.query.page;
+                promise = query.limit(limit).skip(page * limit).exec();
+            } else {
+                promise = query.exec();
+            }
+            promise.onResolve(function (err, results) {
+                if (err)
+                    console.log("Error: " + err);
+                response.jsonp(results);
+            });
         }
-        if (request.query.page!=null){
-            page = request.query.page;
-            promise = query.limit(limit).skip(page * limit).exec();
-        }else{
-            promise = query.exec();
-        }
-        promise.onResolve(function (err, results) {
-            if (err)
-                console.log("Error: " + err);
-            response.jsonp(results);
-        });
     }
 }
 
@@ -141,29 +148,36 @@ function getAllEventsJSONP (request, response, next) {
 //         File Upload                   //
 ///////////////////////////////////////////
 function storeEvent(request, response) {
-    console.log(request.body);
-    try {
+    var header=request.headers['authorization'];
+    console.log("getting get request");
+    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe'){
+        response.statusCode = 401;
+        response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+        response.end('Unauthorized');
+    }else {
+        console.log(request.body);
+        try {
 
-        //var received = JSON.parse(request.body);
-        var event = new db.Events(request.body,true);
-        event.save(function (err, image) {
-            if (err) {
+            //var received = JSON.parse(request.body);
+            var event = new db.Events(request.body, true);
+            event.save(function (err, image) {
+                if (err) {
 
-                console.error(err);
-                response.json({"Error": err});
+                    console.error(err);
+                    response.json({"Error": err});
 
-            }
-            else
-            {
-                response.json({"Success": true});
-            }
-        });
-    }
-    catch (e) {
+                }
+                else {
+                    response.json({"Success": true});
+                }
+            });
+        }
+        catch (e) {
 
-        console.log("Illegal JSON data received.");
-        response.json({"Sorry. Failed to upload. Did you include all info?":400});
+            console.log("Illegal JSON data received.");
+            response.json({"Sorry. Failed to upload. Did you include all info?": 400});
 
+        }
     }
 }
 
