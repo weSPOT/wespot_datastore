@@ -46,7 +46,7 @@ var queryAll = function() {
 };
 
 
-var queryAllWithFilter = function(username, verb, starttime, endtime, target, object, context){
+var queryAllWithFilter = function(username, verb, starttime, endtime, target, object, context, phase, subphase){
 
     var query = Events.find({});
     if (username !== undefined)
@@ -58,9 +58,14 @@ var queryAllWithFilter = function(username, verb, starttime, endtime, target, ob
     if (object !== undefined)
         query.where('object',object);
     if (context !== undefined){
-        // query.where('context',context);
-
         query.or([{ 'context': context }, { 'context.course': context }]);
+    }
+    if (phase !== undefined){
+        query.where('context.phase',phase);
+    }
+
+    if (subphase !== undefined){
+        query.where('context.subphase',subphase);
     }
 
     try {
@@ -76,7 +81,7 @@ var queryAllWithFilter = function(username, verb, starttime, endtime, target, ob
     }
 
     return query;
-}
+};
 
 
 exports.queryAll = queryAll;

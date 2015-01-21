@@ -1,5 +1,9 @@
 //setup Dependencies
-var connect = require('connect')
+var fs = require('fs')
+    , jsoncsv = require('json-csv')
+    , express = require('express')
+    , csv = require('express-csv')
+    , connect = require('connect')
     , express = require('express')
     , io = require('socket.io')
     , fs = require("fs")
@@ -88,9 +92,11 @@ ioWeb.on('connection', function(socket){
 app.get(path.join(context,'/'), routes.index);
 
 app.get(path.join(context, '/events'), getAllEventsJSONP);
-
+app.get(path.join(context, '/eventsCsv'), getAllEventsCSV);
+app.get(path.join(context, '/duplicateContext'), duplicateContext);
 
 app.post(path.join(context, '/event'), storeEvent);
+
 
 //console.log('Listening on http://' + server.address() + ':' + port );
 
@@ -100,10 +106,154 @@ app.post(path.join(context, '/event'), storeEvent);
 ///////////////////////////////////////////
 
 
+function getAllEventsCSV (request, response, next) {
+    var header=request.headers['authorization'];
+    console.log("getting get request");
+    //check if there is a query parameter sensor
+    if (_.size(request.query) == 0) {
+
+        var query = db.queryAll();
+        var promise = query.exec();
+        promise.onResolve(function (err, results) {
+            if (err)
+                console.log("Error: " + err);
+            response.jsonp(results);
+        });
+
+    } else {
+        var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.target, request.query.object, request.query.context);
+        var promise = null;
+        var limit = 1000;
+        if (request.query.limit != null) {
+            limit = request.query.limit;
+        }
+        if (request.query.page != null) {
+            page = request.query.page;
+            promise = query.limit(limit).skip(page * limit).exec();
+        } else {
+            promise = query.exec();
+        }
+        promise.onResolve(function (err, results) {
+            if (err)
+                console.log("Error: " + err);
+            jsoncsv.csvBuffered(
+                    results,{
+                    fields : [
+                        {
+                            name : 'username',
+                            label : 'username'
+                        },
+                        {
+                            name : 'starttime',
+                            label : 'time'
+                        },
+                        {
+                            name : 'verb',
+                            label : 'verb'
+                        },
+                        {
+                            name : 'context.course',
+                            label : 'inquiry'
+                        },
+                        {
+                            name : 'context.phase',
+                            label : 'phase'
+                        },
+                        {
+                            name : 'context.subphase',
+                            label : 'widget'
+                        },
+                        {
+                            name : 'object',
+                            label : 'url'
+                        }
+
+                    ]},
+                function(err,csv) {
+                    response.send(csv);
+                }
+            );
+        });
+    }
+}
+
+function duplicateContext(request, response, next) {
+    var header=request.headers['authorization'];
+    console.log("getting get request");
+    //LARAe -> 9IywPIjfdlE7gh9T2vj523BTqu2YRkVe
+    //Diagnostic Instrument -> DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e
+    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
+        response.statusCode = 401;
+        response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+        response.end('Unauthorized');
+    }else {
+        //check if there is a query parameter sensor
+        if (_.size(request.query) == 0) {
+            var query = db.queryAll();
+            var promise = query.exec();
+            promise.onResolve(function (err, results) {
+                if (err)
+                    console.log("Error: " + err);
+                response.json({"Error": "missing parameters"});
+            });
+        } else {
+            if (request.query.context !== undefined && request.query.newcontext !== undefined) {
+                var query = db.queryAllWithFilter(undefined, undefined, undefined, undefined, undefined, undefined, request.query.context, request.query.phase, request.query.subphase);
+                var promise = null;
+                var limit = 1000;
+                if (request.query.limit != null) {
+                    limit = request.query.limit;
+                }
+                if (request.query.page != null) {
+                    page = request.query.page;
+                    promise = query.limit(limit).skip(page * limit).exec();
+                } else {
+                    promise = query.exec();
+                }
+
+                promise.onResolve(function (err, results) {
+                    var error = "";
+                    for (i = 0; i < results.length; i++) {
+                        var newEvent = results[i].toJSON();
+                        newEvent.context.course = request.query.newcontext;
+                        if (newphase !== undefined)
+                            newEvent.context.phase = request.query.phase;
+                        delete newEvent._id;
+                        delete newEvent.__v;
+                        var event = new db.Events(newEvent, true);
+                        event.save(function (err, image) {
+                            if (err) {
+                                console.log(newEvent);
+                                console.error(err);
+                                error += err;
+                            }
+                            else
+                                console.log({"Success": true});
+                        });
+                    }
+                    if (err) {
+                        console.log("Error: " + err);
+                        error += err;
+                    }
+                    if (error == "") {
+                        response.jsonp({"Success": true});
+                    } else {
+                        response.jsonp({"error": error});
+                    }
+                    //response.jsonp(results);
+                });
+            }
+        }
+    }
+
+}
+
 function getAllEventsJSONP (request, response, next) {
     var header=request.headers['authorization'];
     console.log("getting get request");
-    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe'){
+    //LARAe -> 9IywPIjfdlE7gh9T2vj523BTqu2YRkVe
+    //Diagnostic Instrument -> DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e
+    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
         response.end('Unauthorized');
@@ -120,7 +270,7 @@ function getAllEventsJSONP (request, response, next) {
             });
 
         } else {
-            var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.target, request.query.object, request.query.context);
+            var query = db.queryAllWithFilter(request.query.username, request.query.verb, request.query.starttime, request.query.endtime, request.query.target, request.query.object, request.query.context, request.query.phase, request.query.subphase);
             var promise = null;
             var limit = 1000;
             if (request.query.limit != null) {
@@ -149,7 +299,7 @@ function getAllEventsJSONP (request, response, next) {
 ///////////////////////////////////////////
 function storeEvent(request, response) {
     var header=request.headers['authorization'];
-    console.log("getting get request");
+    console.log("getting post request");
     if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe'){
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
