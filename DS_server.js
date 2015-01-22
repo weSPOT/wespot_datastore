@@ -184,11 +184,11 @@ function duplicateContext(request, response, next) {
     console.log("getting get request");
     //LARAe -> 9IywPIjfdlE7gh9T2vj523BTqu2YRkVe
     //Diagnostic Instrument -> DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e
-    /*if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
+    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
         response.end('Unauthorized');
-    }else {*/
+    }else {
         //check if there is a query parameter sensor
         if (_.size(request.query) == 0) {
             var query = db.queryAll();
@@ -247,7 +247,7 @@ function duplicateContext(request, response, next) {
                 });
             }
         }
-    //}
+    }
 
 }
 
@@ -256,11 +256,11 @@ function getAllEventsJSONP (request, response, next) {
     console.log("getting get request");
     //LARAe -> 9IywPIjfdlE7gh9T2vj523BTqu2YRkVe
     //Diagnostic Instrument -> DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e
-    /*if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
+    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
         response.end('Unauthorized');
-    }else {*/
+    }else {
         //check if there is a query parameter sensor
         if (_.size(request.query) == 0) {
 
@@ -291,7 +291,7 @@ function getAllEventsJSONP (request, response, next) {
                 response.jsonp(results);
             });
         }
-    //}
+    }
 }
 
 
