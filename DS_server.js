@@ -94,7 +94,7 @@ app.get(path.join(context,'/'), routes.index);
 app.get(path.join(context, '/events'), getAllEventsJSONP);
 app.get(path.join(context, '/eventsCsv'), getAllEventsCSV);
 app.get(path.join(context, '/duplicateContext'), duplicateContext);
-
+//app.get(path.join(context, '/changeContext'), changeContext);
 app.post(path.join(context, '/event'), storeEvent);
 
 
@@ -177,16 +177,18 @@ function getAllEventsCSV (request, response, next) {
     }
 }
 
+
+
 function duplicateContext(request, response, next) {
     var header=request.headers['authorization'];
     console.log("getting get request");
     //LARAe -> 9IywPIjfdlE7gh9T2vj523BTqu2YRkVe
     //Diagnostic Instrument -> DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e
-    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
+    /*if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
         response.end('Unauthorized');
-    }else {
+    }else {*/
         //check if there is a query parameter sensor
         if (_.size(request.query) == 0) {
             var query = db.queryAll();
@@ -216,11 +218,12 @@ function duplicateContext(request, response, next) {
                     for (i = 0; i < results.length; i++) {
                         var newEvent = results[i].toJSON();
                         newEvent.context.course = request.query.newcontext;
-                        if (newphase !== undefined)
-                            newEvent.context.phase = request.query.phase;
+                        if (request.query.newphase !== undefined)
+                            newEvent.context.phase = request.query.newphase;
                         delete newEvent._id;
                         delete newEvent.__v;
                         var event = new db.Events(newEvent, true);
+                        console.log(newEvent);
                         event.save(function (err, image) {
                             if (err) {
                                 console.log(newEvent);
@@ -244,7 +247,7 @@ function duplicateContext(request, response, next) {
                 });
             }
         }
-    }
+    //}
 
 }
 
@@ -253,11 +256,11 @@ function getAllEventsJSONP (request, response, next) {
     console.log("getting get request");
     //LARAe -> 9IywPIjfdlE7gh9T2vj523BTqu2YRkVe
     //Diagnostic Instrument -> DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e
-    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
+    /*if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe' && header!='DDr8yQIDHVaL4ogvV6YP0gtPvA0UnL6e' ){
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
         response.end('Unauthorized');
-    }else {
+    }else {*/
         //check if there is a query parameter sensor
         if (_.size(request.query) == 0) {
 
@@ -288,7 +291,7 @@ function getAllEventsJSONP (request, response, next) {
                 response.jsonp(results);
             });
         }
-    }
+    //}
 }
 
 
@@ -421,3 +424,44 @@ function storeEvent(request, response) {
 
  }
  */
+
+/*function changeContext(request, response, next){
+    var query = db.queryAllARLearnByString();
+    var promise = null;
+    var limit = 1000;
+    if (request.query.limit != null) {
+        limit = request.query.limit;
+    }
+    if (request.query.page != null) {
+        page = request.query.page;
+        promise = query.limit(limit).skip(page * limit).exec();
+    } else {
+        promise = query.exec();
+    }
+
+    promise.onResolve(function (err, results) {
+        var error = "";
+        console.log("LEngth result:"+results.length);
+        for (i = 0; i < results.length; i++) {
+            var json = results[i].toJSON();
+            var context = results[i].toJSON().context;
+            //console.log(json);
+            var newContext = JSON.parse(context);
+            delete json.context;
+            delete json._id;
+            delete json.__v;
+            json.context = newContext;
+            //console.log(json);
+            var event = new db.Events(json, true);
+            event.save(function (err, image) {
+                if (err) {
+                    console.log(newEvent);
+                    console.error(err);
+                    error += err;
+                }
+                else
+                    console.log({"Success": true});
+            });
+        }
+    });*/
+//}

@@ -45,6 +45,12 @@ var queryAll = function() {
     return query;
 };
 
+var queryAllARLearnByString = function() {
+
+    var query = Events.find({context: /ARLearn/});
+    //query.select({_id: 0});
+    return query;
+};
 
 var queryAllWithFilter = function(username, verb, starttime, endtime, target, object, context, phase, subphase){
 
@@ -86,3 +92,4 @@ var queryAllWithFilter = function(username, verb, starttime, endtime, target, ob
 
 exports.queryAll = queryAll;
 exports.queryAllWithFilter = queryAllWithFilter;
+exports.queryAllARLearnByString = queryAllARLearnByString;
