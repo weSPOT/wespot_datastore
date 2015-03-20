@@ -1,6 +1,6 @@
 # Data Store for learning analytics events
 
-If you want to collect data from social networks such as blogs and Twitter, do not heasitate to visit: https://github.com/jlsantoso/stepup/tree/master/StepUpTrackers
+If you want to collect data from social networks such as blogs and Twitter, do not heasitate to visit: https://github.com/jlsantoso/trackers
 
 ## Related documents/publications/deliverables
 
