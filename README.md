@@ -13,15 +13,19 @@ The main services defined are:
 
 ### Get events
 
-app.get(path.join(context, '/events'), getAllEventsJSONP); - You can add all the parameters defined in the Schema (see bellow)
+* app.get(path.join(context, '/events'), getAllEventsJSONP) 
+   - You can add all the parameters defined in the Schema (see bellow)
 
 ### Store events
 
-app.post(path.join(context, '/event'), storeEvent); - Single events
-app.post(path.join(context, '/events'), storeEvents); - Array of events
+* app.post(path.join(context, '/event'), storeEvent); 
+    - Push single events
+* app.post(path.join(context, '/events'), storeEvents); 
+    - Push array of events
 
 If you want to avoid the cross-domain problem with JavaScript, you can use the following service
-app.post(path.join(context, '/eventc'), storeEventc);
+
+* app.post(path.join(context, '/eventc'), storeEventc);
 
 ## Schema definition
 
