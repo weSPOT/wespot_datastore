@@ -23,7 +23,7 @@ The main services defined are:
 * app.post(path.join(context, '/events'), storeEvents); 
     - Push array of events
 
-If you want to avoid the cross-domain problem with JavaScript, you can use the following service
+If you want to avoid the cross-domain problem with JavaScript, you can use the following service and add your host to the list of allowed hosts:
 
 * app.post(path.join(context, '/eventc'), storeEventc);
 
