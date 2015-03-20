@@ -1,5 +1,10 @@
 # Data Store for learning analytics events
 
+## Related documents/publications/deliverables
+
+* Journal of Universal Computer Science (http://www.jucs.org/): Under review
+* weSPOT project (D5.3): http://wespot.net/public-deliverables
+
 ## Installation
 
 - Install Node JS: https://nodejs.org/
