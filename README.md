@@ -45,7 +45,7 @@ The schema is defined as:
 
       starttime: Date,
 
-       endtime: Date,
+      endtime: Date,
 
       target: String,
 
