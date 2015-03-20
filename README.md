@@ -35,8 +35,10 @@ The schema definition is a simplification of xAPI: https://github.com/adlnet/xAP
 
 The schema is defined as:
 
-var eventSchema = new Schema({
 
+
+    var eventSchema = new Schema({
+    
     username: String,
 
     verb: String,
@@ -54,7 +56,9 @@ var eventSchema = new Schema({
     location: Schema.Types.Mixed,
 
     originalrequest: Schema.Types.Mixed
+    
+    },{collection:"events"});
 
-},{collection:"events"});
+   
 
 
