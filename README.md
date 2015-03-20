@@ -1,5 +1,7 @@
 # Data Store for learning analytics events
 
+If you want to gather and collect information from social networks, do not heasitate to visit: https://github.com/jlsantoso/stepup/tree/master/StepUpTrackers
+
 ## Related documents/publications/deliverables
 
 * Journal of Universal Computer Science (http://www.jucs.org/): Under review
