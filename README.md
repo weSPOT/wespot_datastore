@@ -39,23 +39,23 @@ The schema is defined as:
 
     var eventSchema = new Schema({
     
-    username: String,
+      username: String,
 
-    verb: String,
+      verb: String,
 
-    starttime: Date,
+      starttime: Date,
 
-    endtime: Date,
+       endtime: Date,
 
-    target: String,
+      target: String,
 
-    object: String,
+      object: String,
 
-    context: Schema.Types.Mixed,
+      context: Schema.Types.Mixed,
 
-    location: Schema.Types.Mixed,
+      location: Schema.Types.Mixed,
 
-    originalrequest: Schema.Types.Mixed
+      originalrequest: Schema.Types.Mixed
     
     },{collection:"events"});
 
