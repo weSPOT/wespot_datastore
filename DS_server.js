@@ -40,9 +40,11 @@ app.use(session({ resave: true,
     saveUninitialized: true,
     secret: 'uwotm8'
 }));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.text({limit: '50mb'}));
-app.use(bodyParser.json({limit: '50mb'}));
+
+app.use(bodyParser.urlencoded({ type: '*/x-www-form-urlencoded', extended: true }));
+app.use(bodyParser.text({limit: '20mb'}));
+app.use(bodyParser.json({type: 'application/*+json', limit: '20mb'}));
+
 app.use(context, express.static(__dirname + '/static'));
 //app.use(express.static(__dirname + '/static'));
 
@@ -87,15 +89,31 @@ ioWeb.on('connection', function(socket){
 //         Server Routes                 //
 ///////////////////////////////////////////
 
+/*app.all('/', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    next();
+});*/
 
+app.all('*', function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    //res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
 
 app.get(path.join(context,'/'), routes.index);
 
 app.get(path.join(context, '/events'), getAllEventsJSONP);
 app.get(path.join(context, '/eventsCsv'), getAllEventsCSV);
-app.get(path.join(context, '/duplicateContext'), duplicateContext);
-//app.get(path.join(context, '/changeContext'), changeContext);
+//app.get(path.join(context, '/duplicateContext'), duplicateContext);
+//app.get(path.join(context, '/refactoringData'), refactoringData3);
+//app.get(path.join(context, '/removeduplicatesslack'), refactoringRemoveDuplicatesSlack);
 app.post(path.join(context, '/event'), storeEvent);
+app.post(path.join(context, '/rest/pushEvent'), storeEventw);
+app.post(path.join(context, '/events'), storeEvents);
+app.post(path.join(context, '/eventc'), storeEventc);
 
 
 //console.log('Listening on http://' + server.address() + ':' + port );
@@ -134,8 +152,12 @@ function getAllEventsCSV (request, response, next) {
             promise = query.exec();
         }
         promise.onResolve(function (err, results) {
+            for (i = 0; i < results.length; i++) {
+                results[i].starttimelong = results[i].starttime.getTime();
+            }
             if (err)
                 console.log("Error: " + err);
+
             jsoncsv.csvBuffered(
                     results,{
                     fields : [
@@ -144,7 +166,7 @@ function getAllEventsCSV (request, response, next) {
                             label : 'username'
                         },
                         {
-                            name : 'starttime',
+                            name : 'starttimelong',
                             label : 'time'
                         },
                         {
@@ -160,17 +182,22 @@ function getAllEventsCSV (request, response, next) {
                             label : 'phase'
                         },
                         {
-                            name : 'context.subphase',
+                            name : 'context.widget_type',
                             label : 'widget'
                         },
                         {
                             name : 'object',
                             label : 'url'
+                        },
+                        {
+                            name : 'originalrequest.value',
+                            label : 'value'
                         }
 
                     ]},
                 function(err,csv) {
-                    response.send(csv);
+                    var result = String(csv).replace(/\[object object\]/gi,'');
+                    response.send(result);
                 }
             );
         });
@@ -295,19 +322,54 @@ function getAllEventsJSONP (request, response, next) {
 }
 
 
-
-
-///////////////////////////////////////////
-//         File Upload                   //
-///////////////////////////////////////////
 function storeEvent(request, response) {
-    var header=request.headers['authorization'];
+    var header = request.headers['authorization'];
     console.log("getting post request");
-    if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe'){
+    if (header != '9IywPIjfdlE7gh9T2vj523BTqu2YRkVe') {
         response.statusCode = 401;
         response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
         response.end('Unauthorized');
-    }else {
+    } else {
+        console.log(request.body);
+        try {
+            var query = db.queryAllWithFilter(request.body.username, request.body.verb, request.body.starttime, request.body.endtime, request.body.target, request.body.object, request.body.context, undefined, undefined);
+
+            promise.onResolve(function (err, results) {
+                if (err)
+                    console.log("Error: " + err);
+                //var received = JSON.parse(request.body);
+                if (results.length > 0) return response.json({"Success": true});
+                var event = new db.Events(request.body, true);
+                event.save(function (err, image) {
+                    if (err) {
+
+                        console.error(err);
+                        response.json({"Error": err});
+
+                    }
+                    else {
+                        response.json({"Success": true});
+                    }
+                });
+            });
+        }
+        catch (e) {
+
+            console.log("Illegal JSON data received.");
+            response.json({"Sorry. Failed to upload. Did you include all info?": 400});
+
+        }
+    }
+}
+
+function storeEventw(request, response) {
+    /*var header = request.headers['authorization'];
+    console.log("getting post request");
+    if (header != '9IywPIjfdlE7gh9T2vj523BTqu2YRkVe') {
+        response.statusCode = 401;
+        response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+        response.end('Unauthorized');
+    } else {*/
         console.log(request.body);
         try {
 
@@ -331,9 +393,77 @@ function storeEvent(request, response) {
             response.json({"Sorry. Failed to upload. Did you include all info?": 400});
 
         }
+    //}
+}
+
+function storeEvents(request, response) {
+        var header=request.headers['authorization'];
+        console.log("getting post request");
+        if (header!='9IywPIjfdlE7gh9T2vj523BTqu2YRkVe'){
+            response.statusCode = 401;
+            response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+            response.end('Unauthorized');
+        }else {
+            console.log(request.body);
+            try {
+                var received = request.body;
+
+                for(var i in received) {
+
+                    var event = new db.Events(received[i], true);
+                    event.save(function (err, image) {
+                        if (err) {//throw err;//handle error
+                            console.log('error message:'+err);
+                            console.log('object:'+event)
+                        }
+                    });
+                }
+                response.json({"Success": true});
+            }
+            catch (e) {
+                console.log("Illegal JSON data received."+e);
+                response.json({"Sorry. Failed to upload. Did you include all info?": 400});
+
+            }
+        }
+    }
+
+
+function storeEventc(request, response) {
+    var header=request.headers['authorization'];
+    var host=request.headers['origin'];
+    if (host=='http://localhost:8888' || host=='http://openbadgesapi.appspot.com' || host=='http://ariadne.cs.kuleuven.be') {
+        console.log(request.headers);
+        console.log(host);
+        console.log("getting post request");
+        console.log(request.body);
+        try {
+            //var received = JSON.parse(request.body);
+            var event = new db.Events(request.body, true);
+            event.save(function (err, image) {
+                if (err) {
+
+                    console.error(err);
+                    response.json({"Error": err});
+
+                }
+                else {
+                    response.json({"Success": true});
+                }
+            });
+        }
+        catch (e) {
+
+            console.log("Illegal JSON data received.");
+            response.json({"Sorry. Failed to upload. Did you include all info?": 400});
+
+        }
     }
 }
 
+///////////////////////////////////////////
+//         File Upload                   //
+///////////////////////////////////////////
 
 /*
  function storeFile(request, response) {
@@ -428,7 +558,7 @@ function storeEvent(request, response) {
 /*function changeContext(request, response, next){
     var query = db.queryAllARLearnByString();
     var promise = null;
-    var limit = 1000;
+    var limit = 1400;
     if (request.query.limit != null) {
         limit = request.query.limit;
     }
@@ -438,30 +568,255 @@ function storeEvent(request, response) {
     } else {
         promise = query.exec();
     }
-
+    var contador = 0;
     promise.onResolve(function (err, results) {
         var error = "";
+
+        console.log("LEngth result:"+results.length);
+        for (i = 0; i < results.length; i++) {
+            var json = results[i].toJSON();
+            var context = results[i].toJSON().originalrequest.responseValue;
+            //console.log(json);
+            try {
+                var newContext = JSON.parse(context);
+                console.log(json._id);
+                delete json.originalrequest.responseValue;
+                delete json._id;
+                delete json.__v;
+                json.originalrequest.responseValue = newContext;
+
+                contador++;
+                var event = new db.Events(json, true);
+                 event.save(function (err, image) {
+                 if (err) {
+                 console.log(newEvent);
+                 console.error(err);
+                 error += err;
+                 }
+                 else
+                 console.log({"Success": true});
+                 });
+            }catch(err) {
+                console.log("originalrequest.responseValue is an object")
+            }
+        }
+        console.log(contador);
+    });
+
+}*/
+
+
+function giveEquivalent(subphase){
+    if (subphase=='filerepo') return 'files';
+    else if (subphase=='file') return 'files';
+    else if (subphase=='wespot_mindmeister') return 'mindmaps';
+    else if (subphase=='mindmeistermap') return 'mindmaps';
+    else if (subphase=='answers') return 'questions';
+    else if (subphase=='answer') return 'questions';
+    else if (subphase=='question') return 'questions';
+    else if (subphase=='questions') return 'questions';
+    else if (subphase=='group_forum_topics') return 'discussion';
+    else if (subphase=='groupforumtopic') return 'discussion';
+    else if (subphase=='wespot_arlearn') return 'data_collection';
+    else if (subphase=='data_collection') return 'data_collection'; //This tag was defined for the ARLearn tracker, but the rest come from elgg
+    else if (subphase=='arlearn') return 'data_collection';
+    else if (subphase=='arlearntask') return 'data_collection';
+    else if (subphase=='hypothesis') return 'hypothesis';
+    else if (subphase=='hypothesis_top') return 'hypothesis';
+    else if (subphase=='pages') return 'pages';
+    else if (subphase=='page') return 'pages';
+    else if (subphase=='blog') return 'blog';
+    else if (subphase=='conclusions') return 'conclusions';
+    else if (subphase=='notes') return 'notes';
+    else if (subphase=='reflection') return 'reflection';
+    else if (subphase=='recommedationplugin') return 'recommendationPlugin';
+    return null;
+}
+function refactoringData(request, response, next){
+    var query = db.queryAll();
+    var promise = null;
+    var limit = null;
+    promise = query.exec();
+
+    var contador = 0;
+    promise.onResolve(function (err, results) {
+        var error = "";
+
+        console.log("LEngth result:"+results.length);
+        for (i = 0; i < results.length; i++) {
+            var json = results[i].toJSON();
+            if (results[i].toJSON().hasOwnProperty('context')) {
+                var context = results[i].toJSON().context;
+                if ((!context.hasOwnProperty('widget_type'))&&context.hasOwnProperty('phase')&&context.hasOwnProperty('subphase')){
+                    //console.log(json);
+                    try {
+                        if (giveEquivalent(context.subphase.toLowerCase())==null)
+                            context.widget_type=null;
+                        else context.widget_type=giveEquivalent(context.subphase.toLowerCase());
+
+                        delete json._id;
+                        delete json.__v;
+                        delete json.context;
+                        json.context = context;
+                        contador++;
+                        if (context.widget_type==null&&context.subphase!='reinforcement'&&context.subphase!='assessment'
+                            &&context.course!='arLearn-fake'&&context.subphase!='Information foraging')
+                            console.log(context);
+
+                        results[i].remove();
+
+                        var event = new db.Events(json, true);
+                        event.save(function (err, image) {
+                            if (err) {
+                                console.log(json);
+                                console.error(err);
+                                error += err;
+                            }
+                            else
+                                console.log({"Success": true});
+                        });
+                    } catch (err) {
+                        console.log(err)
+                    }
+                }
+            }
+        }
+        console.log(contador);
+    });
+
+}
+
+function refactoringData2 (request, response, next){
+    var query = db.queryAll();
+    var promise = null;
+    var limit = null;
+    promise = query.exec();
+
+    var contador = 0;
+    promise.onResolve(function (err, results) {
+        var error = "";
+
+        console.log("LEngth result:"+results.length);
+        for (i = 0; i < results.length; i++) {
+            var json = results[i].toJSON();
+            if (results[i].toJSON().hasOwnProperty('context')) {
+                var context = results[i].toJSON().context;
+                if (context.hasOwnProperty('phase')&&context.hasOwnProperty('subphase')&&(context.subphase=='data_collection')){
+                    //console.log(json);
+                    try {
+                        if (giveEquivalent(context.subphase.toLowerCase())==null)
+                            context.widget_type=null;
+                        else context.widget_type=giveEquivalent(context.subphase.toLowerCase());
+
+                        delete json._id;
+                        delete json.__v;
+                        delete json.context;
+                        json.context = context;
+                        contador++;
+                        if (context.widget_type==null&&context.subphase!='reinforcement'&&context.subphase!='assessment'
+                            &&context.course!='arLearn-fake'&&context.subphase!='Information foraging')
+                            console.log(context);
+
+                        results[i].remove();
+
+                        var event = new db.Events(json, true);
+                        event.save(function (err, image) {
+                            if (err) {
+                                console.log(json);
+                                console.error(err);
+                                error += err;
+                            }
+                            else
+                                console.log({"Success": true});
+                        });
+                    } catch (err) {
+                        console.log(err)
+                    }
+                }
+            }
+        }
+        console.log(contador);
+    });
+
+}
+
+function refactoringData3 (request, response, next){
+    var query = db.queryAllWithFilter(undefined, undefined, undefined, undefined, undefined, undefined, '82011', '3', undefined);
+    var promise = null;
+    var limit = null;
+    promise = query.exec();
+
+    var contador = 0;
+    promise.onResolve(function (err, results) {
+        var error = "";
+
         console.log("LEngth result:"+results.length);
         for (i = 0; i < results.length; i++) {
             var json = results[i].toJSON();
             var context = results[i].toJSON().context;
             //console.log(json);
-            var newContext = JSON.parse(context);
-            delete json.context;
-            delete json._id;
-            delete json.__v;
-            json.context = newContext;
-            //console.log(json);
-            var event = new db.Events(json, true);
-            event.save(function (err, image) {
-                if (err) {
-                    console.log(newEvent);
-                    console.error(err);
-                    error += err;
-                }
-                else
-                    console.log({"Success": true});
-            });
+            try {
+                context.phase = '1';
+
+                delete json._id;
+                delete json.__v;
+                delete json.context;
+                json.context = context;
+                contador++;
+
+                console.log(json);
+                results[i].remove();
+
+                var event = new db.Events(json, true);
+                event.save(function (err, image) {
+                    if (err) {
+                        console.log(json);
+                        console.error(err);
+                        error += err;
+                    }
+                    else
+                        console.log({"Success": true});
+                });
+            } catch (err) {
+                console.log(err)
+            }
         }
-    });*/
-//}
+        console.log(contador);
+    });
+
+}
+
+function refactoringRemoveDuplicatesSlack (request, response, next){
+    console.log("get data");
+
+    var query = db.queryAllWithFilter(undefined, undefined, undefined, undefined, undefined, undefined, 'C02H3MPCR', undefined, undefined);
+    var promise = null;
+    var limit = null;
+    promise = query.limit(50000).exec();
+
+    var contador = 0;
+    promise.onResolve(function (err, results) {
+        var error = "";
+        var identifiers = {};
+        console.log("LEngth result:"+results.length);
+        for (i = 0; i < results.length; i++) {
+            var json = results[i].toJSON();
+            var id = results[i].username + results[i].context + results[i].starttime;
+
+            try {
+                contador++;
+                if (!identifiers.hasOwnProperty(id))
+                    identifiers[id] = 1;
+                else {
+                    identifiers[id] = identifiers[id] + 1;
+                    results[i].remove();
+                }
+                console.log('Repeated identifiers: '+identifiers[id]);
+            } catch (err) {
+                console.log(err)
+            }
+        }
+        console.log(contador);
+    });
+
+}

@@ -4,14 +4,13 @@ var mongoose = require('mongoose');
 
 //mongoose.connect('mongodb://localhost/datastore');
 mongoose.connect('mongodb://davinci.cs.kuleuven.be:27017/datastore');
+//mongoose.connect('mongodb://davinci.cs.kuleuven.be:27017/datastore_dev');
 //var server = new Server('ensor.cs.kuleuven.be', 27017, {auto_reconnect: true});
 
 var db_connection = mongoose.connection;
 db_connection.on('error', console.error.bind(console, 'connection error:'));
 db_connection.once('open', function callback () {
-
     console.log("Connected to the database");
-
 });
 
 
@@ -31,6 +30,12 @@ var eventSchema = new Schema({
     originalrequest: Schema.Types.Mixed
 },{collection:"events"});
 
+eventSchema.path('username').required(true);
+eventSchema.path('verb').required(true);
+eventSchema.path('starttime').required(true);
+eventSchema.path('object').required(true);
+eventSchema.path('context').required(true);
+
 
 var Events = mongoose.model('event',eventSchema);
 
@@ -45,9 +50,16 @@ var queryAll = function() {
     return query;
 };
 
+var queryById = function(id) {
+
+    var query = Events.find(id);
+    //query.select({_id: 0});
+    return query;
+};
+
 var queryAllARLearnByString = function() {
 
-    var query = Events.find({context: /ARLearn/});
+    var query = Events.find({verb: "response" }).sort({starttime: -1});
     //query.select({_id: 0});
     return query;
 };
@@ -91,5 +103,6 @@ var queryAllWithFilter = function(username, verb, starttime, endtime, target, ob
 
 
 exports.queryAll = queryAll;
+exports.queryById = queryById;
 exports.queryAllWithFilter = queryAllWithFilter;
 exports.queryAllARLearnByString = queryAllARLearnByString;
