@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Datastore by svencharleer</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Datastore</h1>
+        <p>Data Store for learning analytics events</p>
+        <p class="view"><a href="https://github.com/svencharleer/datastore">View the Project on GitHub <small>svencharleer/datastore</small></a></p>
+        <ul>
+          <li><a href="https://github.com/svencharleer/datastore/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/svencharleer/datastore/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/svencharleer/datastore">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="data-store-for-learning-analytics-events" class="anchor" href="#data-store-for-learning-analytics-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data Store for learning analytics events</h1>
+
+<p>If you want to collect data from social networks such as blogs and Twitter, do not heasitate to visit: <a href="https://github.com/jlsantoso/trackers">https://github.com/jlsantoso/trackers</a></p>
+
+<h2>
+<a id="related-documentspublicationsdeliverables" class="anchor" href="#related-documentspublicationsdeliverables" aria-hidden="true"><span class="octicon octicon-link"></span></a>Related documents/publications/deliverables</h2>
+
+<ul>
+<li>Journal of Universal Computer Science (<a href="http://www.jucs.org/">http://www.jucs.org/</a>): Under review</li>
+<li>weSPOT project (D5.3): <a href="http://wespot.net/public-deliverables">http://wespot.net/public-deliverables</a>
+</li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<ul>
+<li>Install Node JS: <a href="https://nodejs.org/">https://nodejs.org/</a>
+</li>
+<li>Download our app: all the modules are also included in GitHub - check modules folder.</li>
+<li>mongodb: modify the URL of your mongodb in the following file: routes/db.js</li>
+<li>Execute the datastore: node start DS_server.js</li>
+</ul>
+
+<h2>
+<a id="services-definition" class="anchor" href="#services-definition" aria-hidden="true"><span class="octicon octicon-link"></span></a>Services definition</h2>
+
+<p>The main services defined are:</p>
+
+<h3>
+<a id="get-events" class="anchor" href="#get-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>Get events</h3>
+
+<ul>
+<li>app.get(path.join(context, '/events'), getAllEventsJSONP) 
+
+<ul>
+<li>You can add all the parameters defined in the Schema (see bellow)</li>
+</ul>
+</li>
+</ul>
+
+<h3>
+<a id="store-events" class="anchor" href="#store-events" aria-hidden="true"><span class="octicon octicon-link"></span></a>Store events</h3>
+
+<ul>
+<li>app.post(path.join(context, '/event'), storeEvent); 
+
+<ul>
+<li>Push single events</li>
+</ul>
+</li>
+<li>app.post(path.join(context, '/events'), storeEvents); 
+
+<ul>
+<li>Push array of events</li>
+</ul>
+</li>
+</ul>
+
+<p>If you want to avoid the cross-domain problem with JavaScript, you can use the following service and add your host to the list of allowed hosts:</p>
+
+<ul>
+<li>app.post(path.join(context, '/eventc'), storeEventc);</li>
+</ul>
+
+<h2>
+<a id="schema-definition" class="anchor" href="#schema-definition" aria-hidden="true"><span class="octicon octicon-link"></span></a>Schema definition</h2>
+
+<p>see file routes/db.js</p>
+
+<p>The schema definition is a simplification of xAPI: <a href="https://github.com/adlnet/xAPI-Spec/blob/master/xAPI.md">https://github.com/adlnet/xAPI-Spec/blob/master/xAPI.md</a></p>
+
+<p>The schema is defined as:</p>
+
+<pre><code>var eventSchema = new Schema({
+
+  username: String,
+
+  verb: String,
+
+  starttime: Date,
+
+  endtime: Date,
+
+  target: String,
+
+  object: String,
+
+  context: Schema.Types.Mixed,
+
+  location: Schema.Types.Mixed,
+
+  originalrequest: Schema.Types.Mixed
+
+},{collection:"events"});
+</code></pre>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/svencharleer">svencharleer</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
